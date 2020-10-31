@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+    <style>
+        :root {
+            --cellsize: 39px;
+        }
+        body {
+            background-color: rgba(65, 69, 77, 1);
+            margin: 0;
+            padding: 0;
+        }
+        #conatiner {
+            background-color: rgb(195, 162, 132, 1);
+            margin: 80px auto;
+            width: 605px;
+            height: 605px;
+            position: relative;
+        }
+        #board {
+            position: relative;
+            margin: auto;
+            margin-left: 25px;
+            width: 563px;
+            height: 560px;
+            border-bottom: solid 1px black;
+            border-right: solid 1px black;
+        }
+
+        .innerBoard {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 520px;
+            height: 520px;
+        }
+        .xAxis {
+            font-size: 0;
+            margin-left: 4px;
+        }
+        .xAxis span {
+            width: 40px;
+            height: 25px;
+            font-size: 16px;
+            text-align: center;
+            display: inline-block;
+        }
+        .yAxis {
+            position: absolute;
+            top: 6px;
+        }
+        .yAxis span {
+            width: 25px;
+            height: 40px;
+            line-height: 40px;
+            font-size: 15px;
+            text-align: center;
+            display: block;
+        }
+        .cell {
+            width: var(--cellsize);
+            height: var(--cellsize);
+            display: inline-block;
+            border-top: solid 1px black;
+            border-left: solid 1px black;
+            line-height: var(--cellsize);
+            text-align: center;
+            vertical-align: middle;
+        }
+        .innerCell {
+            width: 40px;
+            height: 40px;
+            font-size: 36px;
+            display: inline-block;
+            border-radius: 50%;
+            line-height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+        .point {
+            position: absolute;
+            background-color: black;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .centerPoint {
+            top: 50%;
+            left: 50%;
+            margin: -4px;
+        }
+        .topLeftPoint {
+            top: 116px;
+            left: 116px;
+        }
+        .topRightPoint {
+            top: 116px;
+            right: 116px;
+        }
+        .bottomLeftPoint {
+            bottom: 116px;
+            left: 116px;
+        }
+        .bottomRightPoint {
+            bottom: 116px;
+            right: 116px;
+        }
+    </style>
+    <script>
+        let pattern = [];
+        let N = 13;
+
+        for (let i = 0; i < N; i++) {
+            let tmp = [];
+            for (let j = 0; j < N; j++) {
+                tmp.push(0);
+            }
+            pattern.push(tmp);
+        }
+
+        const colorText = { 0: "", 1: "⚪️", 2: "⚫️" };
+        let gameOver = false;
+        let color = 2;
+
+        function appendPoint(conatiner, classNamePre) {
+            let point = document.createElement("div");
+            point.classList.add(classNamePre + "Point");
+            point.classList.add("point");
+            conatiner.appendChild(point);
+        }
+
+        function show() {
+            let board = document.getElementById("board");
+            board.innerText = "";
+
+            for (let i = 0; i < N + 1; i++) {
+                for (let j = 0; j < N + 1; j++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    board.appendChild(cell);
+                }
+                board.appendChild(document.createElement("br"));
+            }
+
+            appendPoint(board, "center")
+            appendPoint(board, "topLeft")
+            appendPoint(board, "topRight")
+            appendPoint(board, "bottomLeft")
+            appendPoint(board, "bottomRight")
+
+            let innerBoard = document.createElement("div");
+            innerBoard.classList.add("innerBoard");
+            innerBoard.id = 'innerBoard';
+            board.appendChild(innerBoard);
+
+            refreshInnerBoard();
+        }
+
+        function refreshInnerBoard() {
+            let innerBoard = document.getElementById("innerBoard");
+            innerBoard.innerText = "";
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) {
+                    let p = pattern[i][j];
+                    let cell = document.createElement("div");
+                    cell.innerText = colorText[p];
+                    cell.classList.add("innerCell");
+                    innerBoard.appendChild(cell);
+
+                    if (p === 0) {
+                        cell.addEventListener("click", () => {
+                            userMove(i, j);
+                        });
+                    }
+                }
+                innerBoard.appendChild(document.createElement("br"));
+            }
+        }
+
+        function userMove(x, y) {
+            if (gameOver) return;
+
+            pattern[x][y] = color;
+            if (check(pattern, color)) {
+                gameOver = true;
+                setTimeout(() => {
+                    alert(colorText[color] + " 赢了。");
+                }, 100);
+                show();
+                return;
+            }
+            color = 3 - color;
+
+            refreshInnerBoard();
+
+            if (willWin(pattern, color)) {
+                console.log(colorText[color] + " 将会赢。");
+            }
+
+            //computerMove();
+        }
+
+        function computerMove() {
+            let choice = bestChoice(pattern, color);
+            console.log(choice);
+            if (choice.point) {
+                pattern[choice.point[0]][choice.point[1]] = color;
+            }
+            if (check(pattern, color)) {
+                gameOver = true;
+                setTimeout(() => {
+                    alert(colorText[color] + " 赢了。");
+                }, 100);
+                show();
+                return;
+            }
+            color = 3 - color;
+
+            refreshInnerBoard();
+
+            if (willWin(pattern, color)) {
+                console.log(colorText[color] + "将会赢。");
+            }
+        }
+
+        function clone(pattern) {
+            return JSON.parse(JSON.stringify(pattern));
+        }
+
+        function willWin(pattern, color) {
+            for (let i = 0; i < N; i++) {
+                let win = true;
+                for (let j = 0; j < N; j++) {
+                    if (pattern[i][j]) continue;
+
+                    let tmp = clone(pattern);
+                    tmp[i][j] = color;
+
+                    if (check(tmp, color)) {
+                        return [i, j];
+                    }
+                }
+            }
+
+            return null;
+        }
+        
+        function bestChoice(pattern, color) {
+            let p;
+            if ((p = willWin(pattern, color))) {
+                return {
+                    point: p,
+                    result: 1,
+                };
+            }
+
+            let result = -2;
+            let point = null;
+
+            for (let i = 0; i < 3; i++) {
+                let win = true;
+                for (let j = 0; j < 3; j++) {
+                    if (pattern[i][j]) continue;
+
+                    let tmp = clone(pattern);
+                    tmp[i][j] = color;
+                    let r = bestChoice(tmp, 3 - color).result;
+
+                    if (-r > result) {
+                        result = -r;
+                        point = [i, j];
+                    }
+                }
+            }
+
+            return {
+                point: point,
+                result: point ? result : 0,
+            };
+        }
+
+        function check(pattern, color) {
+            let count = 0;
+
+            for (let i = 0; i < pattern.length; i++) {
+                count = 0;
+                for (let j = 0; j < pattern[i].length; j++) {
+                    if (pattern[i][j] === color) {
+                        count++;
+                        if (count === 5) return true;
+                    } else {
+                        count = 0;
+                    }
+                }
+            }
+            for (let i = 0; i < pattern.length; i++) {
+                count = 0;
+                for (let j = 0; j < pattern[i].length; j++) {
+                    if (pattern[j][i] === color) {
+                        count++;
+                        if (count === 5) return true;
+                    } else {
+                        count = 0;
+                    }
+                }
+            }
+            {
+                count = 0;
+                for (let j = 0; j < pattern.length; j++) {
+                    if (pattern[j][j] === color) {
+                        count++;
+                        if (count === 5) return true;
+                    } else {
+                        count = 0;
+                    }
+                }
+            }
+            {
+                count = 0;
+                for (let j = 0; j < pattern.length; j++) {
+                    if (pattern[j][pattern.length - j] === color) {
+                        count++;
+                        if (count === 5) return true;
+                    } else {
+                        count = 0;
+                    }
+                }
+            }
+        }
+
+        window.onload = function () {
+            show();
+            //console.log(bestChoice(pattern, color));
+        };
+    </script>
+    <body>
+        <div id="conatiner">
+            <div class="xAxis">
+                <span>1</span>
+                <span>2</span>
+                <span>3</span>
+                <span>4</span>
+                <span>5</span>
+                <span>6</span>
+                <span>7</span>
+                <span>8</span>
+                <span>9</span>
+                <span>10</span>
+                <span>11</span>
+                <span>12</span>
+                <span>13</span>
+                <span>14</span>
+                <span>15</span>
+            </div>
+            <div class="yAxis">
+                <span>A</span>
+                <span>B</span>
+                <span>C</span>
+                <span>D</span>
+                <span>E</span>
+                <span>F</span>
+                <span>G</span>
+                <span>H</span>
+                <span>I</span>
+                <span>J</span>
+                <span>K</span>
+                <span>L</span>
+                <span>M</span>
+                <span>N</span>
+                <span>O</span>
+            </div>
+            <div id="board"></div>
+        </div>
+    </body>
+</html>
