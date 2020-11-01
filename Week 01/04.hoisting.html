@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<script>
+    var foo = 1;
+    function bar() {
+        console.log(foo);//undefined
+        if (!foo) {
+            var foo = 10000;
+        }
+        console.log(foo);//10000
+    }
+    bar();
+
+    function mixFunction(a) {
+        var result = [], i, n;
+        n = a.length;
+        for (i = 0; i < n; i++) {
+            result[i] = function () {
+                //Closure对外部变量是引用
+                console.log("for i=" + i);
+                return a[i - 1]; //a[i-1]
+            };
+        }
+        return result;
+    }
+    var mixcall = mixFunction([10, 20, 30]);
+    var f = mixcall[0];
+    console.log(f());
+    console.log(mixcall[0]());
+    console.log(mixcall[1]());
+    console.log(mixcall[2]());
+
+</script>
