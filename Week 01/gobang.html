@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <html>
     <style>
         :root {
@@ -17,22 +18,13 @@
             position: relative;
         }
         #board {
-            position: relative;
-            margin: auto;
-            margin-left: 25px;
-            width: 563px;
-            height: 560px;
-            border-bottom: solid 1px black;
-            border-right: solid 1px black;
-        }
-
-        .innerBoard {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 45px;
+            left: 45px;
             width: 520px;
             height: 520px;
         }
+        
         .xAxis {
             font-size: 0;
             margin-left: 4px;
@@ -57,16 +49,6 @@
             display: block;
         }
         .cell {
-            width: var(--cellsize);
-            height: var(--cellsize);
-            display: inline-block;
-            border-top: solid 1px black;
-            border-left: solid 1px black;
-            line-height: var(--cellsize);
-            text-align: center;
-            vertical-align: middle;
-        }
-        .innerCell {
             width: 40px;
             height: 40px;
             font-size: 36px;
@@ -76,34 +58,6 @@
             text-align: center;
             vertical-align: middle;
             cursor: pointer;
-        }
-        .point {
-            position: absolute;
-            background-color: black;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-        .centerPoint {
-            top: 50%;
-            left: 50%;
-            margin: -4px;
-        }
-        .topLeftPoint {
-            top: 116px;
-            left: 116px;
-        }
-        .topRightPoint {
-            top: 116px;
-            right: 116px;
-        }
-        .bottomLeftPoint {
-            bottom: 116px;
-            left: 116px;
-        }
-        .bottomRightPoint {
-            bottom: 116px;
-            right: 116px;
         }
     </style>
     <script>
@@ -122,50 +76,16 @@
         let gameOver = false;
         let color = 2;
 
-        function appendPoint(conatiner, classNamePre) {
-            let point = document.createElement("div");
-            point.classList.add(classNamePre + "Point");
-            point.classList.add("point");
-            conatiner.appendChild(point);
-        }
-
         function show() {
             let board = document.getElementById("board");
             board.innerText = "";
-
-            for (let i = 0; i < N + 1; i++) {
-                for (let j = 0; j < N + 1; j++) {
-                    let cell = document.createElement("div");
-                    cell.classList.add("cell");
-                    board.appendChild(cell);
-                }
-                board.appendChild(document.createElement("br"));
-            }
-
-            appendPoint(board, "center")
-            appendPoint(board, "topLeft")
-            appendPoint(board, "topRight")
-            appendPoint(board, "bottomLeft")
-            appendPoint(board, "bottomRight")
-
-            let innerBoard = document.createElement("div");
-            innerBoard.classList.add("innerBoard");
-            innerBoard.id = 'innerBoard';
-            board.appendChild(innerBoard);
-
-            refreshInnerBoard();
-        }
-
-        function refreshInnerBoard() {
-            let innerBoard = document.getElementById("innerBoard");
-            innerBoard.innerText = "";
             for (let i = 0; i < N; i++) {
                 for (let j = 0; j < N; j++) {
                     let p = pattern[i][j];
                     let cell = document.createElement("div");
                     cell.innerText = colorText[p];
-                    cell.classList.add("innerCell");
-                    innerBoard.appendChild(cell);
+                    cell.classList.add("cell");
+                    board.appendChild(cell);
 
                     if (p === 0) {
                         cell.addEventListener("click", () => {
@@ -173,7 +93,7 @@
                         });
                     }
                 }
-                innerBoard.appendChild(document.createElement("br"));
+                board.appendChild(document.createElement("br"));
             }
         }
 
@@ -191,7 +111,7 @@
             }
             color = 3 - color;
 
-            refreshInnerBoard();
+            show();
 
             if (willWin(pattern, color)) {
                 console.log(colorText[color] + " 将会赢。");
@@ -328,9 +248,50 @@
             }
         }
 
+        function drawGrid() {
+
+            let c = document.getElementById('grids');
+            let ctx = c.getContext("2d");
+            ctx.strokeStyle = '#000'
+            ctx.strokeWith = 1;
+            ctx.beginPath();
+            
+            for (var x = 0.5; x < 561; x += 40) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, 560);
+                ctx.stroke();
+            }
+            for (var y = 0.5; y < 561; y += 40) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(560, y);
+                ctx.stroke();
+            }
+
+            ctx.closePath();
+
+            ctx.beginPath();
+            ctx.arc(120,120,5,Math.PI*2,0,true);
+            ctx.arc(440,120,5,Math.PI*2,0,true);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(280,280,5,Math.PI*2,0,true);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(120,440,5,Math.PI*2,0,true);
+            ctx.arc(440,440,5,Math.PI*2,0,true);
+            ctx.closePath();
+            ctx.fill();
+
+            return;
+        }
+
         window.onload = function () {
+            drawGrid();
             show();
-            //console.log(bestChoice(pattern, color));
         };
     </script>
     <body>
@@ -369,7 +330,9 @@
                 <span>N</span>
                 <span>O</span>
             </div>
-            <div id="board"></div>
+            <canvas id="grids" width="561px" height="561px" style="margin-left: 25px;">
+            </canvas>
+            <div id="board" class="board"></div>
         </div>
     </body>
 </html>
