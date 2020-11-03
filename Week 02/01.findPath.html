@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <style>
+        #container {
+            width: 701px;
+            font-size: 0px;
+        }
+        .cell {
+            width: 6px;
+            height: 6px;
+            display: inline-block;
+            background-color: gray;
+            border-bottom: solid 1px white;
+            border-right: solid 1px white;
+            line-height: 5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+
+    <body>
+        <div id="container"></div>
+        <br />
+        <button onclick="sava()">保存</button>
+        <button onclick="reset()">清除</button>
+    </body>
+    <script>
+        let map = localStorage["map"]
+            ? JSON.parse(localStorage["map"])
+            : Array(10000).fill(0);
+        let mousedown = false;
+        let clear = false;
+
+        function sleep(t) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve();
+                }, t);
+            });
+        }
+
+        function show() {
+            container.innerText = "";
+
+            for (let i = 0; i < 100; i++) {
+                for (let j = 0; j < 100; j++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+
+                    if (map[i * 100 + j]) cell.style.backgroundColor = "black";
+
+                    cell.addEventListener("mousemove", () => {
+                        if (mousedown) {
+                            if (clear) {
+                                cell.style.backgroundColor = "";
+                                map[i * 100 + j] = 0;
+                            } else {
+                                cell.style.backgroundColor = "black";
+                                map[i * 100 + j] = 1;
+                            }
+                        }
+                    });
+
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        async function findPath(map, start, end) {
+            let table = Object.create(map);
+            let queue = [start];
+
+            function insert(x, y, pre) {
+                if (x < 0 || x >= 100 || y < 0 || y >= 100) 
+                    return;
+
+                if (table[100 * x + y])
+                    return;
+
+                container.childNodes[100 * x + y].style.backgroundColor = "lightgreen";
+                table[(100 * x + y)] = pre;
+                queue.push([x, y]);
+            }
+
+            while (queue.length) {
+                let [x, y] = queue.shift();
+
+                console.log(x, y);
+                if (x === end[0] && y === end[1]) {
+                    let path = [];
+
+                    while (x != start[1] || y != start[0]) {
+                        await sleep(1);
+                        [x, y] = table[100 * x + y];
+                        path.push([x, y]);
+                        container.childNodes[ 100 * x + y ].style.backgroundColor = "red";
+                    }
+                    return path;
+                }
+
+                await sleep(1);
+                insert(x - 1, y, [x, y]);
+                insert(x, y - 1, [x, y]);
+                insert(x + 1, y, [x, y]);
+                insert(x, y + 1, [x, y]);
+
+                insert(x - 1, y - 1, [x, y]);
+                insert(x - 1, y + 1, [x, y]);
+                insert(x + 1, y - 1, [x, y]);
+                insert(x + 1, y + 1, [x, y]);
+            }
+
+            return null;
+        }
+
+        document.addEventListener("mousedown", (e) => {
+            mousedown = true;
+            clear = e.which === 3;
+        });
+
+        document.addEventListener("mouseup", () => {
+            mousedown = false;
+        });
+
+        document.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+        });
+
+        window.onload = function () {
+            let container = document.getElementById("container");
+            show();
+        };
+
+        function sava() {
+            localStorage["map"] = JSON.stringify(map);
+        }
+        function reset() {
+            localStorage.removeItem("map");
+            show();
+        }
+    </script>
+</html>
