@@ -25,6 +25,34 @@
         <button onclick="reset()">清除</button>
     </body>
     <script>
+        class Sorted {
+            constructor(data, compare) {
+                this.data = data.slice();
+                this.compare = compare || ((a, b) => a - b);
+            }
+            take() {
+                let min = this.data[0];
+                let minIndex = 0;
+
+                if (!this.data.length)
+                    return;
+
+                for (let i = 1; i < this.data.length; i++) {
+                    if (this.compare(this.data[i], min) < 0) {
+                        min = this.data[i];
+                        minIndex = i;
+                    }
+                }
+
+                this.data[minIndex] = this.data[this.data.length - 1];
+                this.data.pop();
+                return min;
+            }
+            give(v) {
+                this.data.push(v);
+            }
+        }
+
         let map = localStorage["map"]
             ? JSON.parse(localStorage["map"])
             : Array(10000).fill(0);
@@ -67,34 +95,45 @@
         }
 
         async function findPath(map, start, end) {
+            console.log(JSON.stringify(map))
             let table = Object.create(map);
-            let queue = [start];
+            let queue = new Sorted([start], (a, b) => distance(a) - distance(b));
 
             function insert(x, y, pre) {
-                if (x < 0 || x >= 100 || y < 0 || y >= 100) 
-                    return;
+                if (x < 0 || x >= 100 || y < 0 || y >= 100) return;
 
-                if (table[100 * x + y])
-                    return;
+                if (table[100 * y + x]) return;
 
-                container.childNodes[100 * x + y].style.backgroundColor = "lightgreen";
-                table[(100 * x + y)] = pre;
-                queue.push([x, y]);
+                container.childNodes[100 * y + x].style.backgroundColor = "lightgreen";
+                table[100 * y + x] = pre;
+                queue.give([x, y]);
             }
 
-            while (queue.length) {
-                let [x, y] = queue.shift();
+            function distance(point) {
+                return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2;
+            }
+
+            while (queue.data.length) {
+                let [x, y] = queue.take();
 
                 console.log(x, y);
                 if (x === end[0] && y === end[1]) {
                     let path = [];
 
-                    while (x != start[1] || y != start[0]) {
+                    while (x != start[0] || y != start[1]) {
                         await sleep(1);
-                        [x, y] = table[100 * x + y];
+                        container.childNodes[
+                            100 * y + x
+                        ].style.backgroundColor = "purple";
+                        [x, y] = table[100 * y + x];
                         path.push([x, y]);
-                        container.childNodes[ 100 * x + y ].style.backgroundColor = "red";
                     }
+
+                    container.childNodes[
+                        100 * start[1] + start[0]
+                    ].style.backgroundColor = "purple";
+
+                    console.log("步数：", path.length);
                     return path;
                 }
 
@@ -135,7 +174,7 @@
             localStorage["map"] = JSON.stringify(map);
         }
         function reset() {
-            localStorage.removeItem("map");
+            map = Array(10000).fill(0);
             show();
         }
     </script>
