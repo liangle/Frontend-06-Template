@@ -34,8 +34,7 @@
                 let min = this.data[0];
                 let minIndex = 0;
 
-                if (!this.data.length)
-                    return;
+                if (!this.data.length) return;
 
                 for (let i = 1; i < this.data.length; i++) {
                     if (this.compare(this.data[i], min) < 0) {
@@ -56,8 +55,10 @@
         let map = localStorage["map"]
             ? JSON.parse(localStorage["map"])
             : Array(10000).fill(0);
+
         let mousedown = false;
         let clear = false;
+        let isFound = false;
 
         function sleep(t) {
             return new Promise((resolve, reject) => {
@@ -89,22 +90,35 @@
                         }
                     });
 
+                    cell.addEventListener("click", () => {
+                        console.log("当前坐标：x=", j, "y=", i);
+                        cell.style.backgroundColor = "red";
+                    });
+
                     container.appendChild(cell);
                 }
             }
         }
 
-        async function findPath(map, start, end) {
-            console.log(JSON.stringify(map))
+        function findPath(map, start, end) {
+            isFound = false;
+            doFindPath(map, start, end); //正向找
+            doFindPath(map, end, start); //反向找
+        }
+
+        async function doFindPath(map, start, end) {
             let table = Object.create(map);
-            let queue = new Sorted([start], (a, b) => distance(a) - distance(b));
+            let queue = new Sorted(
+                [start],
+                (a, b) => distance(a) - distance(b)
+            );
 
             function insert(x, y, pre) {
                 if (x < 0 || x >= 100 || y < 0 || y >= 100) return;
-
                 if (table[100 * y + x]) return;
 
-                container.childNodes[100 * y + x].style.backgroundColor = "lightgreen";
+                container.childNodes[100 * y + x].style.backgroundColor =
+                    "lightgreen";
                 table[100 * y + x] = pre;
                 queue.give([x, y]);
             }
@@ -114,10 +128,12 @@
             }
 
             while (queue.data.length) {
+                if (isFound) return null;
                 let [x, y] = queue.take();
 
                 console.log(x, y);
                 if (x === end[0] && y === end[1]) {
+                    isFound = true;
                     let path = [];
 
                     while (x != start[0] || y != start[1]) {
