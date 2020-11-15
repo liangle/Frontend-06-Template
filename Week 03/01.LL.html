@@ -58,10 +58,10 @@
     }
 
     function AdditiveExpression(source) {
-        if (source[0].type === "Number") {
+        if (source[0].type === "MultiplicativeExpression") {
             let node = {
                 type: "AdditiveExpression",
-                children: []
+                children: [source[0]]
             }
             source[0] = node;
             return AdditiveExpression(source);
@@ -91,7 +91,7 @@
         if (source[0].type === "Number") {
             let node = {
                 type: "MultiplicativeExpression",
-                children: []
+                children: [source[0]]
             }
             source[0] = node;
             return MultiplicativeExpression(source);
