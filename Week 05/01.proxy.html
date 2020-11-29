@@ -1,0 +1,12 @@
+<script>
+    let obj = {
+        name: 'alan',
+        id: '1'
+    }
+
+    let proxy = new Proxy(obj, {
+        set(obj, prop, val) {
+            console.log(obj, prop, val);
+        }
+    })
+</script>
