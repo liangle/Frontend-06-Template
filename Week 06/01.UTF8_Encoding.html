@@ -1,0 +1,27 @@
+<script>
+    function UTF8_Encoding(string) {
+        var buffer = [];
+        for (let i = 0; i < string.length; i++) {
+            var code = string.charCodeAt(i);
+            // 梁
+            // 十进制：26753
+            // 二进制：110100010000001
+            // 110 100010 000001 -> 11100110 10100010 10000001
+            
+            if (code >= 0 && code <= 127) {
+                buffer.push(code);
+            } else if (code > 127 && code <= 2047) {
+                buffer.push(192 | ((31 & code >> 6)));
+                buffer.push(128 | (63 & code));
+            } else if (code > 2047 && code <= 65535) {
+                buffer.push(224 | ((15 & code >> 12)));
+                buffer.push(128 | ((63 & code >> 6)));
+                buffer.push(128 | (63 & code));
+            }
+        }
+
+        console.log(buffer)
+
+        return buffer;
+    }
+</script>
