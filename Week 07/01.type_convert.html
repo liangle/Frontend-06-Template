@@ -1,0 +1,104 @@
+<script>
+    function stringToNumber(str) {
+        // 获取字符串前缀，判断字符串是否为数字。
+        // 数字的前缀：
+        // 二进制（Binary）：0b 或 0B
+        // 八进制（Octal）：0
+        // 十进制（Decimal）：
+        // 十六进制（Hex）：0x 或 0X
+
+        let tempStr = str;
+        const isMinus = str.startsWith("-"); // 是否为负数
+        if (isMinus) {
+            tempStr = tempStr.substring(1);
+        }
+
+        let regexp = "";
+        let base = 10;
+
+        //如果前缀正确，再判断数字是否正确
+        if (tempStr.startsWith("0b") || tempStr.startsWith("0B")) {
+            tempStr = tempStr.substring(2);
+            regexp = /^[01]+$/;
+            base = 2;
+        } else if (tempStr.startsWith("0x") || tempStr.startsWith("0X")) {
+            tempStr = tempStr.substring(2);
+            regexp = /([0-9]+)|([a-e]+)|([A-E]+)/;
+            base = 16;
+        } else if (tempStr.startsWith("0") && !tempStr.startsWith("0.") && tempStr.length > 1) {
+            tempStr = tempStr.substring(1);
+            regexp = /([0-7]+)/;
+            base = 8;
+        } else {
+            //十进制
+            regexp = /([0-9\.]+)/;
+        }
+
+        if (!regexp.test(tempStr)) 
+            return NaN;
+
+        let returnValue = 0;
+        let intStr = "", pointStr = "";
+        const pointIndex = tempStr.indexOf(".");
+
+        if (pointIndex < 0) {
+            intStr = tempStr;
+        } else if (pointIndex === 0) {
+            pointStr = tempStr.substring(1);
+        } else {
+            const arra = tempStr.split(".");
+            intStr = arra[0];
+            if (arra.length > 0) {
+                pointStr = arra[1];
+            }
+        }
+
+        console.log(`字符串 ”${str}“：进制:${base},负数:${isMinus},整数部分:${intStr},小数部分:${pointStr}`);
+
+        for (let i = intStr.length - 1; i >= 0; i--) {
+            returnValue += getNumber(intStr[i]) * base ** (intStr.length - i - 1); 
+        }
+        for (let i = 0; i < pointStr.length; i++) {
+            returnValue += getNumber(pointStr[i]) * base ** - (i + 1); 
+        }
+
+        return returnValue * (isMinus ? -1 : 1 );
+    }
+
+    function getNumber(num) {
+        if (num === "A" || num === "a") {
+            return 10;
+        } else if (num === "B" || num === "d") {
+            return 11;
+        } else if (num === "C" || num === "c") {
+            return 12;
+        } else if (num === "D" || num === "d") {
+            return 13;
+        } else if (num === "E" || num === "e") {
+            return 14;
+        } else {
+            return num;
+        }
+    }
+
+    console.log(stringToNumber("0"));
+    console.log(stringToNumber("0.1"));
+    console.log(stringToNumber("100"));
+    console.log(stringToNumber("-100"));
+
+    console.log(stringToNumber("0b11111111"));
+    console.log(stringToNumber("0B10000000"));
+    console.log(stringToNumber("0B10000.1"));     // NaN
+    console.log(stringToNumber("0b11113111"));  // NaN
+
+    console.log(stringToNumber("0727"));
+    console.log(stringToNumber("0889"));     // NaN
+
+    console.log(stringToNumber("0xEA90"));
+    console.log(stringToNumber("0X90E"));
+
+
+    function numberToString(num) {
+
+    }
+</script>
