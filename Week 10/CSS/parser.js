@@ -44,6 +44,7 @@ function specificity(selector) {
             p[3] += 1;
         }
     }
+    return p;
 }
 
 function compare(sp1, sp2) {
@@ -60,42 +61,42 @@ function compare(sp1, sp2) {
 }
 
 function computeCSS(element) {
-    const elements = rules.slice().reverse();
+    const elements = stack.slice().reverse();
 
     if (!element.computedStyle)
         element.computedStyle = {};
 
     for (const rule of rules) {
-        const selectorParts = rule.selectors[0].split(" ").reverse();
+        var selectorParts = rule.selectors[0].split(" ").reverse();
         if (!match(element, selectorParts[0]))
             continue;
-    }
 
-    let j = 1;
-    for (let i = 0; i < elements.length; i++) {
-        if (match(elements[i], selectorParts[j])) {
-            j++;
+        let j = 1;
+        for (let i = 0; i < elements.length; i++) {
+            if (match(elements[i], selectorParts[j])) {
+                j++;
+            }
         }
-    }
 
-    let matched = false;
-    if (j >= selectorParts.length)
-        matched = true;
+        let matched = false;
+        if (selectorParts && j >= selectorParts.length)
+            matched = true;
 
-    if (matched) {
-        const sp = specificity(rule.selectors[0]);
-        var computedStyle = element.computedStyle;
+        if (matched) {
+            const sp = specificity(rule.selectors[0]);
+            var computedStyle = element.computedStyle;
 
-        for (const declaration of rule.declarations) {
-            if (!computedStyle[declaration.property])
-                computedStyle[declaration.property] = {};
+            for (const declaration of rule.declarations) {
+                if (!computedStyle[declaration.property])
+                    computedStyle[declaration.property] = {};
 
-            if (!computedStyle[declaration.property].specificity) {
-                computedStyle[declaration.property].value = declaration.value;
-                computedStyle[declaration.property].specificity = sp;
-            } else if (compare(computedStyle[declaration.property].specificity, sp) < 0) {
-                for (const k = 0; k < 4; k ++) {
-                    computedStyle[declaration.property][declaration.value][k] += sp[k];
+                if (!computedStyle[declaration.property].specificity) {
+                    computedStyle[declaration.property].value = declaration.value;
+                    computedStyle[declaration.property].specificity = sp;
+                } else if (compare(computedStyle[declaration.property].specificity, sp) < 0) {
+                    for (const k = 0; k < 4; k ++) {
+                        computedStyle[declaration.property][declaration.value][k] += sp[k];
+                    }
                 }
             }
         }
@@ -140,7 +141,7 @@ function emit(token) {
             if (top.tagName === "style") {
                 addCSSRules(top.children[0].content);
             }
-            layout(pop);
+            layout(top);
             stack.pop();
         }
 
@@ -208,7 +209,7 @@ function tagName(c) {
 function beforeAttributeName(c) {
     if(c.match(/^[\t\n\f ]$/)) {    //处理空格，\t：tab \n：换行 \f：禁止符
         return beforeAttributeName;
-    } else if (c === ">") {
+    } else if (c === "/" || c === ">" || c === EOF) {
         return afterAttributeName(c);
     } else if (c === "=") {
         
@@ -237,7 +238,26 @@ function attributeName(c) {
 }
 
 function afterAttributeName(c) {
+    if (c.match(/^[\t\n\f ]$/)) {
+        return afterAttributeName;
+    } else if (c === "/") {
+        return selfClosingStartTag;
+    } else if (c === "=") {
+        return beforeAttributeValue;
+    } else if (c === ">") {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        emit(currentToken);
+        return data;
+    } else if (c === EOF) {
 
+    } else {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        currentAttribute = {
+            name: "",
+            value: ""
+        }
+        return attributeName(c);
+    }
 }
 
 function beforeAttributeValue(c) {
@@ -278,7 +298,7 @@ function singleQuotedAttributeValue(c) {
 
     } else {
         currentAttribute.value += c;
-        return doubleQuotedAttributeValue;
+        return singleQuotedAttributeValue;
     }
 }
 
@@ -325,6 +345,7 @@ function afterQuotedAttributeValue(c) {
 function selfClosingStartTag(c) {
     if (c === ">") {
         currentToken.isSelfClosing = true;
+        emit(currentToken);
         return data;
     } else if (c === "EOF") {
 

@@ -6,3 +6,13 @@
 如果没有flex元素，则根据justfiyContent来计算元素位置。
 
 ### 计算交叉轴：
+
+### specificity 计算公式
+div div #id
+[0,     1,  0,      2]
+inline  id  class   tag
+
+div .cls #id
+[0,     1,  1,      1]
+
+从左到右，优先级依次下降，inline是写在style属性上的CSS，优先级是1，所以style属性上的CSS优先级最高。
