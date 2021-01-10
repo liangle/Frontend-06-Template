@@ -1,0 +1,66 @@
+<html>
+    <style>
+        div #id .class {
+            background-color: blue;
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+    <body>
+        <div>
+            <div id="id">
+                <div class="class"></div>
+            </div>
+        </div>
+    </body>
+    <script>
+        function matchSelector(element, selector) {
+            if (!selector || !element)
+                return false;
+
+            if (selector.charAt(0) === "#") {
+                if (element.id === selector.replace("#", ""))
+                    return true;
+            } else if (selector.charAt(0) === ".") {
+                if (element.className === selector.replace(".", ""))
+                    return true;
+            } else {
+                if (element.tagName === selector)
+                    return true;
+            }
+        }
+
+        function match(selector, element) {
+            let elements = [element];
+            let current = element;
+
+            console.log(element.parentNode)
+
+            while(current.parentNode) {
+                elements.push(current.parentNode);
+                current = current.parentNode;
+            }
+
+            var selectorParts = selector.split(" ").reverse();
+
+            debugger;
+            if (!matchSelector(element, selectorParts[0]))
+                return false;
+
+            let j = 1;
+            for (let i = 0; i < elements.length; i++) {
+                if (matchSelector(elements[i], selectorParts[j])) {
+                    j++;
+                }
+            }
+
+            let matched = false;
+            if (selectorParts && j >= selectorParts.length)
+                matched = true;
+
+            return matched;
+        }
+
+        match("div #id .class", document.getElementById("id"));
+    </script>
+</html>
