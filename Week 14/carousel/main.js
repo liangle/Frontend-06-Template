@@ -14,12 +14,46 @@ class Carousel extends Component {
     render() {
         this.root = document.createElement("div")
         this.root.classList.add("carousel");
+
         for (const record of this.attributes.src) {
             const child = document.createElement("div");
             child.style.backgroundImage = `url('${record}')`;
             this.root.appendChild(child);
         }
 
+        let position = 0;
+
+        this.root.addEventListener("mousedown", event => {
+            let children = this.root.children;
+            let startX = event.clientX;
+            
+            let move = event => {
+                let x = event.clientX - startX;
+
+                for (const child of children) {
+                    child.style.transition = "none";
+                    child.style.transform = `translateX(${- position * 500 + x}px)`;
+                }
+            }
+
+            let up = event => {
+                let x = event.clientX - startX;
+                position = position - Math.round(x / 500);
+                console.log( Math.round(x / 500));
+
+                for (const child of children) {
+                    child.style.transition = "";
+                    child.style.transform = `translateX(${- position * 500}px)`;
+                }
+                document.removeEventListener("mousemove", move);
+                document.removeEventListener("mouseup", up);
+            }
+
+            document.addEventListener("mousemove", move);
+            document.addEventListener("mouseup", up);
+        });
+
+        /*
         let currentIndex = 0;
         setInterval(() => {
             let children = this.root.children;
@@ -37,8 +71,8 @@ class Carousel extends Component {
                 next.style.transform = `translateX(${-nextIndex*100}%)` // 移到可视区
                 currentIndex = nextIndex;
             }, 16);
+        }, 3000); */
 
-        }, 3000);
         return this.root;
     }
 
