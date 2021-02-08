@@ -14,43 +14,55 @@ export class Dispatcher {
 
 export class Listener {
     constructor(element, recognizer) {
-
         let isListeningMouse = false;
-        let mousedownButtons;
         const contexts = new Map();
         
         element.addEventListener("mousedown", event => {
-            if (isListeningMouse)
-                return;
-        
             let context = Object.create(null);
-            mousedownButtons = event.buttons;
+            contexts.set("mouse" + (1 << event.botton), context);
 
-            contexts.set("mouse" + mousedownButtons, context);
             recognizer.start(event, context);
+            let mousemove = event => {
+                let button = 1;
+                while(button <= event.buttons) {
+                    if(button && event.bottons) {
+                        let key;
+
+                        if(button === 2)
+                            key = 4;
+                        else if(button === 4)
+                            key = 2;
+                        else 
+                            key = button   
+
+                        console.log('run ....')
+                        
+                        let content = contexts.get("mouse" + key);
+                        recognizer.move(event, content);
+                    }
+                    
+                    button = button << 1;
+                }
+            }
+
+            let mouseup = event => {
+                let content = contexts.get("mouse"+(1 << event.button));
+                recognizer.end(event, content);
+                contexts.delete("mouse" + (1 << event.button));
         
-            const mousemove = (event) => {
-                let context = contexts.get("mouse" + mousedownButtons);
-                recognizer.move(event, context);
+                if(event.buttons === 0) {
+                    document.removeEventListener("mousemove", mousemove);
+                    document.removeEventListener("mouseup", mouseup);
+                    isListeningMouse = false;
+                }
             }
         
-            const mouseup = (event) => {
-                let context = contexts.get("mouse" + mousedownButtons);
-                recognizer.end(event, context);
-                contexts.delete("mouse" + mousedownButtons);
-        
-                document.removeEventListener("mousemove", mousemove);
-                document.removeEventListener("mouseup", mouseup);
-                isListeningMouse = false;
-            }
-        
-            if (!isListeningMouse) {
-                element.addEventListener("mousemove", mousemove);
-                element.addEventListener("mouseup", mouseup);
+            if(!isListeningMouse) {
+                document.addEventListener("mousemove", mousemove);
+                document.addEventListener("mouseup", mouseup);
                 isListeningMouse = true;
             }
         });
-
 
         element.addEventListener("touchstart", event => {
             for (const touch of event.changedTouches) {
@@ -117,7 +129,7 @@ export class Recognizer {
             context.isTap = false;
             context.isPan = true;
             context.isPress = false;
-            context.isVertical = Math.abs(dx) - Math.abs(dy)
+            context.isVertical = Math.abs(dx) < Math.abs(dy)
             this.dispatcher.dispatch("prePanStartss", {
                 startX : context.startX,
                 startY : context.startY,
@@ -154,14 +166,16 @@ export class Recognizer {
         }
         if (context.isPress) {
             console.log("pressed")
+            this.dispatcher.dispatch("pressed", {})
         }
     
+        context.points = context.points.filter(point => Date.now() - point.t < 500);
         let d, v;
         if (context.points.length === 0) {
             v = 0;
         } else {
-            context.points = context.points.filter(point => Date.now() - point.t < 500);
-            d = Math.sqrt((point.clientX - context.points[0].x) ** 2 + (point.clientY - context.points[0].y) ** 2);
+            d = Math.sqrt((point.clientX - context.points[0].x) ** 2 + 
+            (point.clientY - context.points[0].y) ** 2);
             v = d / (Date.now() - context.points[0].t);
         }
     
