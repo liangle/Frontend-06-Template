@@ -5,7 +5,7 @@ const contexts = new Map();
 let isListeningMouse = false;
 let mousedownButtons;
 
-element.addEventListener("mousedown", event => {
+document.addEventListener("mousedown", event => {
     if (isListeningMouse)
         return;
 
@@ -24,19 +24,19 @@ element.addEventListener("mousedown", event => {
         end(event, context);
         contexts.delete("mouse" + mousedownButtons);
 
-        element.removeEventListener("mousemove", mousemove);
-        element.removeEventListener("mouseup", mouseup);
+        document.removeEventListener("mousemove", mousemove);
+        document.removeEventListener("mouseup", mouseup);
         isListeningMouse = false;
     }
 
     if (!isListeningMouse) {
-        element.addEventListener("mousemove", mousemove);
-        element.addEventListener("mouseup", mouseup);
+        document.addEventListener("mousemove", mousemove);
+        document.addEventListener("mouseup", mouseup);
         isListeningMouse = true;
     }
 });
 
-element.addEventListener("touchstart", event => {
+document.addEventListener("touchstart", event => {
     for (const touch of event.changedTouches) {
         const context = Object.create(null);
         contexts.set(touch.identifier, context);
@@ -44,14 +44,14 @@ element.addEventListener("touchstart", event => {
     }
 })
 
-element.addEventListener("touchmove", event => {
+document.addEventListener("touchmove", event => {
     for (const touch of event.changedTouches) {
         let context = contexts.get(touch.identifier);
         move(touch, context);
     }
 })
 
-element.addEventListener("touchend", event => {
+document.addEventListener("touchend", event => {
     for (const touch of event.changedTouches) {
         let context = contexts.get(touch.identifier);
         end(touch, context);
@@ -59,7 +59,7 @@ element.addEventListener("touchend", event => {
     }
 })
 
-element.addEventListener("touchcancel", event => {
+document.addEventListener("touchcancel", event => {
     for (const touch of event.changedTouches) {
         let context = contexts.get(touch.identifier);
         cancel(touch, context);
@@ -108,6 +108,7 @@ let end = (point, context) => {
     console.log(context)
     if (context.isTap) {
         clearTimeout(context.handler);
+        dispatch("tap", {})
         console.log("tap")
     }
     if (context.isPan) {
@@ -122,4 +123,12 @@ let end = (point, context) => {
 let cancel = (point, context) => {
     clearTimeout(context.handler);
     // console.log("cancel", point.clientX, point.clientY);
+}
+
+function dispatch(type, properties) {
+    let event = new Event(type);
+    for (const name in properties) {
+        event[name] = properties[name];
+    }
+    element.dispatchEvent(event);
 }
