@@ -18,14 +18,18 @@ export function createElement(type, attibutes, ...children) {
     return element;
 }
 
+export const STATE = Symbol("state"); //成员变量
+export const ATTRIBUTE = Symbol("attribute"); //成员变量
+
 export class Component {
     constructor(type) {
         console.log("Component.constructor")
-        // this.root = this.render();
+        this[ATTRIBUTE] = Object.create(null);
+        this[STATE] = Object.create(null);
     }
 
     setAttribute(name, value) {
-        this.root.setAttribute(name, value);
+        this[ATTRIBUTE][name] = value;
     }
 
     appendChild(child) {
@@ -33,8 +37,14 @@ export class Component {
     }
 
     mountTo(parent) {
-        console.log('parent')
+        if (!this.root) {
+            this.render();
+        }
         parent.appendChild(this.root);
+    }
+
+    triggerEvent(type, args) {
+        this[ATTRIBUTE]["on" + type.replace(/^[\s\S]/, s => s.toUpperCase())](new CustomEvent(type, {detail: args}));
     }
 }
 
