@@ -8,5 +8,8 @@
     "publish": "scp -P 8022 -r ./* allen@127.0.0.1:/home/allen/publish-server"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "unzipper": "^0.10.11"
+  }
 }

@@ -1,14 +1,11 @@
 let http = require("http");
 let fs = require("fs");
+let unzipper = require("unzipper");
 
 http.createServer(function(request, response) {
+    console.log("Request.")
+    // let outfile = fs.createWriteStream("../server/public/tmp.zip");
+    // request.pipe(outfile);
 
-    let outfile = fs.createWriteStream("../server/public/index.html");
-    request.on("data", chunk => {
-        outfile.write(chunk);
-    })
-    request.on("end", () => {
-        outfile.end();
-        response.end("Success!");
-    })
+    request.pipe(unzipper.Extract({ path: '../server/public/' }));
 }).listen(8082)
