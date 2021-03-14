@@ -1,0 +1,12 @@
+{
+  "name": "publish-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "publish": "scp -P 8022 -r ./* allen@127.0.0.1:/home/allen/publish-server"
+  },
+  "author": "",
+  "license": "ISC"
+}
