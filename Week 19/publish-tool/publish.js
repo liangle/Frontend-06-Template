@@ -14,27 +14,25 @@ http.createServer(function(request, response) {
 }).listen(8083)
 
 function publish(token) {
-    fs.stat("sample.html", (err, stats) => {
-        let request = http.request({
-            hostname: "127.0.0.1",
-            port:8082,
-            method: "POST",
-            path: `/publish?token=${token}`,
-            headers: {
-                "Content-Type": "application/octet-stream"
-                // "Content-Length": stats.size
-            }
-        }, response => {
-            console.log(response)
-        });
-        
-        // let file = fs.createReadStream("sample.html");
-        
-        const archive = archiver('zip', {
-            zlib: { level: 9 } // Sets the compression level.
-        });
-        archive.directory("./sample/", false);
-        archive.finalize();
-        archive.pipe(request);
-    })
+    let request = http.request({
+        hostname: "127.0.0.1",
+        port:8082,
+        method: "POST",
+        path: `/publish?token=${token}`,
+        headers: {
+            "Content-Type": "application/octet-stream"
+            // "Content-Length": stats.size
+        }
+    }, response => {
+        console.log(response)
+    });
+    
+    // let file = fs.createReadStream("sample.html");
+    
+    const archive = archiver('zip', {
+        zlib: { level: 9 } // Sets the compression level.
+    });
+    archive.directory("./sample/", false);
+    archive.finalize();
+    archive.pipe(request);
 }
